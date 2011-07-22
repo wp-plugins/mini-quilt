@@ -2,171 +2,182 @@
 /*
 Plugin Name: Mini Quilt
 Plugin URI: http://www.ikirudesign.com/plugins/mini-quilt/
-Description: A stand-alone implementation of the <a href="http://www.ikirudesign.com/themes/kaleidoscope/">Kaleidoscope theme</a>'s Mini Quilt sidebar element.
-Author: David Hayes
-Version: 0.5.0
+Description: A unique way to show recent or random posts in your sidebar using a visually interesting quilt of your posts with colors derived by the <a href="http://www.ikirudesign.com/themes/kaleidoscope/">Kaleidoscope theme</a>'s color algorithm.
+Author: david (b) hayes
+Version: 0.9.0
 Author URI: http://www.davidbhayes.com/
 License: GPL 2.0 (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 */
 
-function mq_css() {
-  mq_load_options();
-  global $patches_across, $rows, $patch_width;
-  $main_width = ($patch_width+4)*$patches_across;
-//  $sheet_url = get_bloginfo('wpurl')."/wp-content/plugins/miniquilt/mqstyle.php";
-//  echo '<link rel="stylesheet" type="text/css" href="'.$sheet_url.'" />';
-/*
-  Yes, I know that !important declarations are bad CSS. 
-  But when you need to override styles while contending with an 
-  unpredictable structure it's quite nearly the only option. 
-*/
-?>
-<style>
-ul.miniquiltbox {
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding: 1px !important;
-  background-color: white;
-  overflow: auto;
-  list-style: none inside none !important;
-  letter-spacing: 1;
-  width: <?php echo $main_width ?>px !important;
-  border: 1px solid #999 !important;
-}
-ul.miniquiltbox li {
-  float: left !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  list-style: none inside none !imporant;
-  clear: none !important;
-  border: none !important;
-  background: none !important;
-}
-ul.miniquiltbox li:before {
-  content: ""  !important; /*This is the override Kubrick's oddball list style*/
-}
-ul.miniquiltbox li a {
-  display: block !important;
-  width: <?php echo $patch_width; ?>px !important;
-  height: <?php echo $patch_width; ?>px !important;
-  border: 2px solid white !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-ul ul.miniquiltbox li a:hover {
-  border: 2px solid #222 !important;
-    margin: 0 !important;
-  padding: 0 !important;
-}
-</style>
-<?php 
-}
-add_filter('wp_head', 'mq_css');
+// -=- Putting the vital styling for the Mini Quilt in the head of the document
+add_action('wp_print_styles', 'add_mq_stylesheet');
 
-function mq_length_fix($x){
-    if(strlen($x)<2){
-        $x = sprintf("0%s",$x);
-    }
-    return $x;
+function add_mq_stylesheet() {
+	$myStyleUrl = WP_PLUGIN_URL . '/mini-quilt/mqstyle.css';
+	$myStyleFile = WP_PLUGIN_DIR . '/mini-quilt/mqstyle.css';
+	if ( file_exists($myStyleFile) ) {
+		wp_register_style('myStyleSheets', $myStyleUrl);
+		wp_enqueue_style( 'myStyleSheets');
+	}
 }
 
-function mq_cos_color ($pshift) {
-  // the color's value
-  $hbase=.82; //$hbase 0<$hsafe<2; ~2 bright/white, ~0 dark/black
-  
-  // the colors saturation
-  global $postyear;
-  $yeardiff = date(Y)-$postyear;  // $hshift 1-->0
-  $hshift = .08*$yeardiff;          // $hshift is how much to change tint/shade /yr
-  
-  if ($hshift > 1) { //this assures that the colors are always valid (after years of darkening)
-    $hshift = 1;
-  }
-  
-  if ($hbase > 1) {     // assuring $hsafe is always <= 1, so that wave peaks are still less than 255 
-    $hsafe = 2-$hbase;  // $hsafe assures that all colors will be valid 
-  }
-  if ($hbase <= 1) {  //when we don't seen to worry about height
-    $hsafe = $hbase;
-  }
-   
-  // change the first (and only the first) +/- to toggle fade/darken
-  $coscol = dechex(127.5*(($hbase-($hsafe*$hshift))+(($hsafe-($hsafe*$hshift))*(cos((M_PI*($pshift))/180)))));
-  return $coscol;
+// -=- Add our function to the widgets_init hook.
+add_action( 'widgets_init', 'mq_load_widgets' );
+
+function mq_load_widgets() {
+	register_widget( 'Mini_Quilt_Widget' );
 }
 
-function mq_broaden_shift($indeg, $broaden=0, $shift=0) { //$range is roughly the length you want to spend on the peak
-  //$newx = $x;  // it's best to avoid values for $range above 75, the curves get wonky
-  $outdeg = $shift+$indeg-($broaden*sin((M_PI*($indeg+$shift))/180));
-  return $outdeg;
-}
+// -=- The Class Extension to make the Widget
+class Mini_Quilt_Widget extends WP_Widget {
+	function Mini_Quilt_Widget() {
+		$widget_ops = array('classname'=>'mq', 'description'=>'A unique and visually interesting way to highlight recent or random posts.' ); // It's basic settings; below, it's control settings
+		$control_ops = array( 'id_base' => 'mq-widget' );
+		$this->WP_Widget( 'mq-widget', 'Mini Quilt', $widget_ops, $control_ops ); //makes the widget
+	}
+	
+	function widget ($args , $instance) {
 
-function mq_date_to_color($day,$year) {
-  global $postyear;
-  $postyear = $year;
+		extract($args);
+		$widget_title = $instance['widget_title'];
+		$rows_to_display = max($instance['rows_to_display'],1); //using max to keep safe from neg/nonint values
+		$columns_to_display = max($instance['columns_to_display'],1);
+		$patch_width = $instance['patch_width'];
+		$patch_height = $instance['patch_height'];
+		$randomize = $instance['randomize'];
+		$show_post_titles = $instance['show_post_titles'];
 
-  $degrees = .986*$day; // beacuse there are 360, not 365.24, degrees in a circle
-  if (get_option(southern_hemisphere)) {$degrees = $degrees+180;}
-  $redshift = mq_broaden_shift($degrees, 18, 134); //Best Values: 18, 134
-  $greenshift = mq_broaden_shift($degrees, 20, 240);//Best Values: 20, 240
-  $blueshift = mq_broaden_shift($degrees, 10); //5, 0
-  $redhex = mq_cos_color($redshift);
-  $greenhex = mq_cos_color($greenshift);
-  $bluehex = mq_cos_color($blueshift);
-  $redfix = mq_length_fix($redhex);
-  $greenfix = mq_length_fix($greenhex);
-  $bluefix = mq_length_fix($bluehex);
-  
-  $bestrgb = sprintf("%s%s%s",$redfix,$greenfix,$bluefix);
-  return $bestrgb;
-}
+		$posts_to_display = $rows_to_display*$columns_to_display;
+		$new_patch_width = max(0,$patch_width-10); //these correct for the padding which was
+		$new_patch_height = max(0,$patch_height-4);// necessary to make the text look ok		
+		if ($new_patch_height < 6 and !$show_post_titles) { 
+			$new_patch_height=6; 
+		}
+		$main_width = ($new_patch_width+14)*$columns_to_display;
 
-function mq_mini_quilt ($args) { 
-    extract($args);
-    mq_load_options();
-    global $patches_across, $rows, $patch_width;
-    $total_patches = $patches_across*$rows;
-    echo $before_widget;
-    echo $before_title.'The Mini Quilt'.$after_title; ?>
-      <ul class="miniquiltbox">
-        <?php
-            $recentPosts = new WP_Query();
-            $query = 'showposts='.$total_patches.'&caller_get_posts=1';
-            $recentPosts->query($query);
-         while ($recentPosts->have_posts()) : $recentPosts->the_post(); 
-          $test_id = get_the_ID(); ?>
-          <li><a style="background: #<?php if (is_single($test_id)) {echo 'bbb';} else {echo mq_date_to_color(get_the_time(z), get_the_time(Y));}; ?> !important;" href="<?php the_permalink() ?>" rel="bookmark" title="&#8220;<?php the_title(); ?>&#8221; from <?php the_time('d M Y'); ?>"></a></li>
-      	<?php endwhile; ?>
-      </ul>
-    <?php echo $after_widget;
-}
+		echo $before_widget;
+		echo $before_title.$widget_title.$after_title; ?>
+		  <ul class="miniquiltbox" style="width: <?php echo $main_width ?>px;">
+			<?php
+				$recentPosts = new WP_Query();
+				if ($randomize) {
+				  $query = 'showposts='.$posts_to_display.'&ignore_sticky_posts=1&orderby=rand';
+				}
+				else {
+				  $query = 'showposts='.$posts_to_display.'&ignore_sticky_posts=1';
+				}
+				$recentPosts->query($query);
+			 while ($recentPosts->have_posts()) : $recentPosts->the_post(); 
+			  $test_id = get_the_ID(); ?>
+				<?php if ($show_post_titles) { ?>
+					<li><a style="background: #<?php if (is_single($test_id)) {echo 'bbb';} else {echo mq_date_to_color(get_the_time('z'), get_the_time('Y'));}; ?>;   width: <?php echo $new_patch_width; ?>px; height: <?php if ($new_patch_height>0) {echo $new_patch_height.'px';} else {echo 'auto';} ?>;" href="<?php the_permalink() ?>" rel="bookmark" title="&#8220;<?php the_title(); ?>&#8221; from <?php the_time('d M Y'); ?>"><?php the_title(); ?></a></li>
+				<?php }
+				else { ?>
+					<li><a style="background: #<?php if (is_single($test_id)) {echo 'bbb';} else {echo mq_date_to_color(get_the_time('z'), get_the_time('Y'));}; ?>;   width: <?php echo $new_patch_width; ?>px; height: <?php echo $new_patch_height; ?>px;" href="<?php the_permalink() ?>" rel="bookmark" title="&#8220;<?php the_title(); ?>&#8221; from <?php the_time('d M Y'); ?>"></a></li>
+			<?php	}
+			 endwhile; ?>
+		  </ul>
+		<?php echo $after_widget;
+	}
+	
+	function update( $new_instance, $old_instance ) {
+		$instance = $old_instance;
 
-function mq_control() {
-    if (!get_option('mq_control')) {$options = array('patch_width'=>20,'patches_across'=>8,'rows'=>6);}
-      else {$options = get_option('mq_control');}
-    
-    if ($_POST['mq_control-submit']) {
-      $options = array('patch_width' => $_POST['mq_control-patch_width'], 'patches_across' => $_POST['mq_control-patches_across'], 'rows' => $_POST['mq_control-rows']);
-      update_option('mq_control', $options);
-    }
-     
-    echo '<p>Patch Size (in pxs):<br /><input type="text" name="mq_control-patch_width" value="'.$options['patch_width'].'" id="mq_quilt-patch_width" /></p>';
-    echo '<p>Columns:<br /><input type="text" name="mq_control-patches_across" value="'.$options['patches_across'].'" id="mq_control-patches_across" /></p>';  
-    echo '<p>Rows:<br /><input type="text" name="mq_control-rows" value="'.$options['rows'].'" id="mq_control-rows" /></p>';
-    echo '<input type="hidden" id="mq_control-submit" name="mq_control-submit" value="1" />';
-}
+		// absint and strip_tags ensure nothing unsavory gets through
+		$instance['widget_title'] = strip_tags( $new_instance['widget_title'] );
+		$instance['rows_to_display'] = absint( $new_instance['rows_to_display'] );
+		$instance['columns_to_display'] = absint( $new_instance['columns_to_display'] );
+		$instance['patch_width'] = absint( $new_instance['patch_width'] );
+		$instance['patch_height'] = absint( $new_instance['patch_height'] );
+		$instance['randomize'] = isset($new_instance['randomize']);
+		$instance['show_post_titles'] = isset($new_instance['show_post_titles']);
 
-function mq_load_options() {
-    $options = get_option('mq_control');
-    global $patches_across, $rows, $patch_width;
-    $patches_across = $options['patches_across'];
-    $rows = $options['rows'];
-    $patch_width = $options['patch_width'];
-}
-function widget_myuniquewidget_register() {
-  register_sidebar_widget('Mini Quilt','mq_mini_quilt');
-  register_widget_control('Mini Quilt','mq_control');
-}
-add_action('init', widget_myuniquewidget_register);
+		return $instance;
+	}
+	
+	function form ($instance) {
+		$defaults = array('widget_title'=>'The Mini Quilt', 'rows_to_display'=>5, 'columns_to_display'=>6, 'patch_width'=>20, 'patch_height'=>20, 'randomize'=>false, 'show_post_titles'=>false);
+		$instance = wp_parse_args( (array) $instance, $defaults ); ?>
+		
+		<p>
+			<label for="<?php echo $this->get_field_id( 'widget_title' ); ?>">Title:</label>
+			<input class="widefat" id="<?php echo $this->get_field_id( 'widget_title' ); ?>" name="<?php echo $this->get_field_name( 'widget_title' ); ?>" value="<?php echo $instance['widget_title']; ?>" type="text" />
+		</p>
 
+		<p>
+			<label for="<?php echo $this->get_field_id( 'rows_to_display' ); ?>">Quilt Dimensions (rows x cols):</label>
+			<input id="<?php echo $this->get_field_id( 'rows_to_display' ); ?>" name="<?php echo $this->get_field_name( 'rows_to_display' ); ?>" value="<?php echo $instance['rows_to_display']; ?>" type="text" size="3" /> x <input id="<?php echo $this->get_field_id( 'columns_to_display' ); ?>" name="<?php echo $this->get_field_name( 'columns_to_display' ); ?>" value="<?php echo $instance['columns_to_display']; ?>" type="text" size="3" />
+		</p>
+		
+		<p>
+			<label for="<?php echo $this->get_field_id( 'patch_width' ); ?>">Patch Dimensions (width x height in <strong>px</strong>):</label>
+			<input id="<?php echo $this->get_field_id( 'patch_width' ); ?>" name="<?php echo $this->get_field_name( 'patch_width' ); ?>" value="<?php echo $instance['patch_width']; ?>" type="text" size="3" /> x <input id="<?php echo $this->get_field_id( 'patch_height' ); ?>" name="<?php echo $this->get_field_name( 'patch_height' ); ?>" value="<?php echo $instance['patch_height']; ?>" type="text" size="3" />
+		</p>
+		
+		<p>
+		<em>To create a Mini Bar: set columns to 1, height to 0, and check Show Post Titles.</em>
+		</p>
+		
+		<p>
+			<input class="checkbox" type="checkbox" <?php checked( $instance['randomize'], 1 ); ?> id="<?php echo $this->get_field_id( 'randomize' ); ?>" name="<?php echo $this->get_field_name( 'randomize' ) ; ?>" />
+			<label for="<?php echo $this->get_field_id( 'randomize' ); ?>">Randomize</label>
+		</p>
+		
+		<p>
+			<input class="checkbox" type="checkbox" <?php checked( $instance['show_post_titles'], 1 ); ?> id="<?php echo $this->get_field_id( 'show_post_titles' ); ?>" name="<?php echo $this->get_field_name( 'show_post_titles' ) ; ?>" />
+			<label for="<?php echo $this->get_field_id( 'show_post_titles' ); ?>">Show Post Titles</label>
+		</p>
+		
+<?php
+	}
+	
+}
+// -=- The Kaleidoscope Functions -- These make the colors
+function mq_date_to_color( $day, $year ) {
+
+	$red = mq_color_maker( $day, $year, 20, 134 ); //18, 134
+	$green = mq_color_maker( $day, $year, 20, 240 ); //20, 240
+	$blue = mq_color_maker( $day, $year, 10, 0 ); // 10, 0
+	
+	return $rgb = "{$red}{$green}{$blue}"; //concanate the calculated colors and return them
+}
+function mq_color_maker( $day, $year, $broaden=0, $shift=0 ) {
+
+	$in_degree = .986*$day; // from 365.25=>360
+	
+	/* pshift = 
+	New degree value = incoming period shift + degree from year - sine function
+	Sine Function = Random value * sine of shifted value 
+		> This essentially works to make the coming cosine function stay near its peak for a while
+		> based on the magnitude of the random value
+	*/
+	$pshift = $shift+$in_degree-($broaden*sin((M_PI*($in_degree+$shift))/180)); 
+	
+	$year_diff = date('Y')-$year;
+	$hshift = .08*$year_diff; // to be used for further away years fading
+	if ( $hshift > 1 ) { //this assures that the colors are always valid otherwise we could get negative numbers
+		$hshift = 1;
+	} 
+	
+	$HBASE = .82; //the center of the function; set between 0 and 2, lower are more saturated (darker)
+	if ( $HBASE > 1 ) {
+		$HSAFE = 2-$HBASE; // $hsafe is to ensure no final values greater than 2, which would create invalid colors
+	} else {
+		$HSAFE = $HBASE;
+	}
+	
+	/* calced_color ==
+	Use Cosine to create a weighted set of results between 0 and 2
+	Multiply by 127.5 to get results between 0 and 255
+	dechex for results between 0 and FF
+	+Change the first (and only the first) +/- to toggle fade/darken
+	*/ 
+	$calced_color = dechex(127.5*(($HBASE-($HSAFE*$hshift))+(($HSAFE-($HSAFE*$hshift))*(cos((M_PI*($pshift))/180))))); 
+	
+	if ( strlen( $calced_color ) < 2 ) { //single digit calced_color values give invalid colors
+	  $calced_color = "0".$calced_color; // so add a zero if it's a single digit
+	}	
+	
+	return $calced_color;
+}
 ?>
