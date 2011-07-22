@@ -4,7 +4,7 @@ Plugin Name: Mini Quilt
 Plugin URI: http://www.ikirudesign.com/plugins/mini-quilt/
 Description: A unique way to show recent or random posts in your sidebar using a visually interesting quilt of your posts with colors derived by the <a href="http://www.ikirudesign.com/themes/kaleidoscope/">Kaleidoscope theme</a>'s color algorithm.
 Author: david (b) hayes
-Version: 0.9.0
+Version: 0.8.0
 Author URI: http://www.davidbhayes.com/
 License: GPL 2.0 (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 */

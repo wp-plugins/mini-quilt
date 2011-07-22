@@ -1,0 +1,45 @@
+/*
+  Yes, I know that !important declarations are bad CSS. 
+	(As, technically, is ul.miniquiltbox.)
+  But when you need to define styles while contending with an 
+  unpredictable structure it's quite nearly the only way to win 
+  specificity battles. 
+*/
+ul.miniquiltbox {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 1px !important;
+  background-color: white;
+  overflow: auto;
+  list-style: none inside none !important;
+  border: 1px solid #999 !important;
+}
+ul.miniquiltbox li {
+  display: block;
+  width: auto;
+  float: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none inside none !imporant;
+  clear: none !important;
+  border: none !important;
+  background: none !important;
+}
+ul.miniquiltbox li:before {
+  content: ""  !important; /*This is the override Kubrick's oddball list style*/
+}
+ul.miniquiltbox li a {
+  display: block !important;
+  border: none;
+  overflow: hidden;
+  color: #FFF !important;
+  text-shadow: none;
+  border: 2px solid white !important;
+  margin: 0 !important;
+  padding: 2px 5px !important;
+}
+ul.miniquiltbox li a:hover {
+  border: 2px solid #333 !important;
+  text-decoration: none;
+  margin: 0 !important;
+}
