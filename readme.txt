@@ -1,10 +1,9 @@
 === Mini Quilt ===
-Contributors: ikirudesign
-Donate link: http://www.ikirudesign.com/
+Contributors: ikirudesign, davidbhayes
 Tags: sidebar, archive, colors, kaleidoscope, widget, recent posts, posts, widgets, random posts, random, plugin
 Requires at least: 2.3.0
-Tested up to: 3.2.1
-Stable tag: trunk
+Tested up to: 3.8.1
+Stable tag: 0.8.1
 
 For drawing attention to your posts in the sidebar. It uses a colorful way of presenting posts (what we call quilts) as sidebar elements.
 
@@ -29,7 +28,7 @@ A fair question. The Mini Quilt isn't going to cure cancer or make you rich. But
 
 = How do the colors work? =
 
-They're derived from the time of year. Deep winter days are solidly blue, spring is the green time of year, and fall is orangish tones. (These are Northern Hemisphere seasons if you were wondering.) Essentially, every single day of the year has a subtly different color, almost imperceptibly subtle. But if, like most blogger, your publishing is spaced by a week or more and irratic, you'll see very interesting colors side-by-side. (For more on this, I'd encourage you check out my blog, which has a number of posts relating to this algorithm I created.)
+They're derived from the time of year. Deep winter days are solidly blue, spring is the green time of year, and fall is orangish tones. (These are Northern Hemisphere seasons if you were wondering.) Essentially, every single day of the year has a subtly different color, almost imperceptibly subtle. But if, like most blogger, your publishing is spaced by a week or more and erratic, you'll see very interesting colors side-by-side. (For more on this, I'd encourage you check out my blog, which has a number of posts relating to this algorithm I created.)
 
 = What's a Mini Bar? =
 
@@ -42,6 +41,11 @@ A Mini Bar is essentially the same as a Mini Quilt--a visually interesting way t
 3. A single simple quilt on the new Twenty Eleven default theme.
 
 == Changelog ==
+
+=0.8.1=
+* Bump to change ownership.
+* Very minor changes to formatting to better match WordPress style.
+
 = 0.8.0 =
 * Made it possible to show post titles, so they can be determined without hovering
 * Added option to randomize quilt
