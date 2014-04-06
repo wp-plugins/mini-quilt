@@ -3,7 +3,7 @@ Contributors: ikirudesign, davidbhayes
 Tags: sidebar, archive, colors, kaleidoscope, widget, recent posts, posts, widgets, random posts, random, plugin
 Requires at least: 2.3.0
 Tested up to: 3.8.1
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 
 For drawing attention to your posts in the sidebar. It uses a colorful way of presenting posts (what we call quilts) as sidebar elements.
 
@@ -42,7 +42,10 @@ A Mini Bar is essentially the same as a Mini Quilt--a visually interesting way t
 
 == Changelog ==
 
-=0.8.1=
+= 0.8.2 =
+* Bump to fully change ownership and deploy well.
+
+= 0.8.1 =
 * Bump to change ownership.
 * Very minor changes to formatting to better match WordPress style.
 
@@ -59,8 +62,8 @@ A Mini Bar is essentially the same as a Mini Quilt--a visually interesting way t
 
 == Upgrade Notice ==
 
-=0.8.0=
+= 0.8.0 =
 Major improvements, including the ability to randomize quilts, show titles, and reuse the widgets. Also, massive changes to structure and quality of underlying code.
 
-=0.5.0=
+= 0.5.0 =
 First release of the plugin

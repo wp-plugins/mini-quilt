@@ -4,7 +4,7 @@ Plugin Name: Mini Quilt
 Plugin URI: http://www.ikirudesign.com/plugins/mini-quilt/
 Description: A unique way to show recent or random posts in your sidebar using a visually interesting quilt of your posts with colors derived by the <a href="http://www.ikirudesign.com/themes/kaleidoscope/">Kaleidoscope theme</a>'s color algorithm.
 Author: david (b) hayes
-Version: 0.8.1
+Version: 0.8.2
 Author URI: http://www.davidbhayes.com/
 License: GPL 2.0 (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 */
@@ -40,8 +40,8 @@ class Mini_Quilt_Widget extends WP_Widget {
 
 		extract( $args );
 		$widget_title = $instance['widget_title'];
-		$rows_to_display = max( $instance['rows_to_display'],1 ); //using max to keep safe from neg/nonint values
-		$columns_to_display = max( $instance['columns_to_display'],1 );
+		$rows_to_display = max( $instance['rows_to_display'], 1 ); //using max to keep safe from neg/nonint values
+		$columns_to_display = max( $instance['columns_to_display'], 1 );
 		$patch_width = $instance['patch_width'];
 		$patch_height = $instance['patch_height'];
 		$randomize = $instance['randomize'];
