@@ -2,8 +2,8 @@
 Contributors: ikirudesign, davidbhayes
 Tags: sidebar, archive, colors, kaleidoscope, widget, recent posts, posts, widgets, random posts, random, plugin
 Requires at least: 2.3.0
-Tested up to: 3.8.1
-Stable tag: 0.8.2
+Tested up to: 4.2.2
+Stable tag: 0.9.0
 
 For drawing attention to your posts in the sidebar. It uses a colorful way of presenting posts (what we call quilts) as sidebar elements.
 
@@ -41,6 +41,10 @@ A Mini Bar is essentially the same as a Mini Quilt--a visually interesting way t
 3. A single simple quilt on the new Twenty Eleven default theme.
 
 == Changelog ==
+
+= 0.9.0 =
+* Fixed widget constructor usage.
+* Made a ton of minor unnecessary cleanups because it was a mess I felt like wasting some time.
 
 = 0.8.2 =
 * Bump to fully change ownership and deploy well.
